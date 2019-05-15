@@ -15,16 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 """Unit tests for Superset"""
-import json
-import unittest
-from unittest import mock
-
-from superset import app, db, security_manager
-from superset.connectors.connector_registry import ConnectorRegistry
-from superset.connectors.druid.models import DruidDatasource
-from superset.connectors.sqla.models import SqlaTable
-from superset.models import core as models
-from .base_tests import SupersetTestCase
+# import json
+# import unittest
+# from unittest import mock
+#
+# from superset import app, db, security_manager
+# from superset.connectors.connector_registry import ConnectorRegistry
+# from superset.connectors.druid.models import DruidDatasource
+# from superset.connectors.sqla.models import SqlaTable
+# from superset.models import core as models
+# from .base_tests import SupersetTestCase
 
 ROLE_TABLES_PERM_DATA = {
     'role_name': 'override_me',
