@@ -724,211 +724,211 @@ class MarkupViz(BaseViz):
         return dict(html=code, theme_css=get_css_manifest_files('theme'))
 
 
-# class SeparatorViz(MarkupViz):
-#
-#     """Use to create section headers in a dashboard, similar to `Markup`"""
-#
-#     viz_type = 'separator'
-#     verbose_name = _('Separator')
-#
-#
-# class WordCloudViz(BaseViz):
-#
-#     """Build a colorful word cloud
-#
-#     Uses the nice library at:
-#     https://github.com/jasondavies/d3-cloud
-#     """
-#
-#     viz_type = 'word_cloud'
-#     verbose_name = _('Word Cloud')
-#     is_timeseries = False
-#
-#     def query_obj(self):
-#         d = super().query_obj()
-#         d['groupby'] = [self.form_data.get('series')]
-#         return d
-#
-#
-# class TreemapViz(BaseViz):
-#
-#     """Tree map visualisation for hierarchical data."""
-#
-#     viz_type = 'treemap'
-#     verbose_name = _('Treemap')
-#     credits = '<a href="https://d3js.org">d3.js</a>'
-#     is_timeseries = False
-#
-#     def _nest(self, metric, df):
-#         nlevels = df.index.nlevels
-#         if nlevels == 1:
-#             result = [{'name': n, 'value': v}
-#                       for n, v in zip(df.index, df[metric])]
-#         else:
-#             result = [{'name': l, 'children': self._nest(metric, df.loc[l])}
-#                       for l in df.index.levels[0]]
-#         return result
-#
-#     def get_data(self, df):
-#         df = df.set_index(self.form_data.get('groupby'))
-#         chart_data = [{'name': metric, 'children': self._nest(metric, df)}
-#                       for metric in df.columns]
-#         return chart_data
-#
-#
-# class CalHeatmapViz(BaseViz):
-#
-#     """Calendar heatmap."""
-#
-#     viz_type = 'cal_heatmap'
-#     verbose_name = _('Calendar Heatmap')
-#     credits = (
-#         '<a href=https://github.com/wa0x6e/cal-heatmap>cal-heatmap</a>')
-#     is_timeseries = True
-#
-#     def get_data(self, df):
-#         form_data = self.form_data
-#
-#         data = {}
-#         records = df.to_dict('records')
-#         for metric in self.metric_labels:
-#             values = {}
-#             for obj in records:
-#                 v = obj[DTTM_ALIAS]
-#                 if hasattr(v, 'value'):
-#                     v = v.value
-#                 values[str(v / 10**9)] = obj.get(metric)
-#             data[metric] = values
-#
-#         start, end = utils.get_since_until(relative_end=relative_end,
-#                                            time_range=form_data.get('time_range'),
-#                                            since=form_data.get('since'),
-#                                            until=form_data.get('until'))
-#         if not start or not end:
-#             raise Exception('Please provide both time bounds (Since and Until)')
-#         domain = form_data.get('domain_granularity')
-#         diff_delta = rdelta.relativedelta(end, start)
-#         diff_secs = (end - start).total_seconds()
-#
-#         if domain == 'year':
-#             range_ = diff_delta.years + 1
-#         elif domain == 'month':
-#             range_ = diff_delta.years * 12 + diff_delta.months + 1
-#         elif domain == 'week':
-#             range_ = diff_delta.years * 53 + diff_delta.weeks + 1
-#         elif domain == 'day':
-#             range_ = diff_secs // (24 * 60 * 60) + 1
-#         else:
-#             range_ = diff_secs // (60 * 60) + 1
-#
-#         return {
-#             'data': data,
-#             'start': start,
-#             'domain': domain,
-#             'subdomain': form_data.get('subdomain_granularity'),
-#             'range': range_,
-#         }
-#
-#     def query_obj(self):
-#         d = super().query_obj()
-#         fd = self.form_data
-#         d['metrics'] = fd.get('metrics')
-#         return d
-#
-#
-# class NVD3Viz(BaseViz):
-#
-#     """Base class for all nvd3 vizs"""
-#
-#     credits = '<a href="http://nvd3.org/">NVD3.org</a>'
-#     viz_type = None
-#     verbose_name = 'Base NVD3 Viz'
-#     is_timeseries = False
-#
-#
-# class BoxPlotViz(NVD3Viz):
-#
-#     """Box plot viz from ND3"""
-#
-#     viz_type = 'box_plot'
-#     verbose_name = _('Box Plot')
-#     sort_series = False
-#     is_timeseries = True
-#
-#     def to_series(self, df, classed='', title_suffix=''):
-#         label_sep = ' - '
-#         chart_data = []
-#         for index_value, row in zip(df.index, df.to_dict(orient='records')):
-#             if isinstance(index_value, tuple):
-#                 index_value = label_sep.join(index_value)
-#             boxes = defaultdict(dict)
-#             for (label, key), value in row.items():
-#                 if key == 'nanmedian':
-#                     key = 'Q2'
-#                 boxes[label][key] = value
-#             for label, box in boxes.items():
-#                 if len(self.form_data.get('metrics')) > 1:
-#                     # need to render data labels with metrics
-#                     chart_label = label_sep.join([index_value, label])
-#                 else:
-#                     chart_label = index_value
-#                 chart_data.append({
-#                     'label': chart_label,
-#                     'values': box,
-#                 })
-#         return chart_data
-#
-#     def get_data(self, df):
-#         form_data = self.form_data
-#
-#         # conform to NVD3 names
-#         def Q1(series):  # need to be named functions - can't use lambdas
-#             return np.nanpercentile(series, 25)
-#
-#         def Q3(series):
-#             return np.nanpercentile(series, 75)
-#
-#         whisker_type = form_data.get('whisker_options')
-#         if whisker_type == 'Tukey':
-#
-#             def whisker_high(series):
-#                 upper_outer_lim = Q3(series) + 1.5 * (Q3(series) - Q1(series))
-#                 return series[series <= upper_outer_lim].max()
-#
-#             def whisker_low(series):
-#                 lower_outer_lim = Q1(series) - 1.5 * (Q3(series) - Q1(series))
-#                 return series[series >= lower_outer_lim].min()
-#
-#         elif whisker_type == 'Min/max (no outliers)':
-#
-#             def whisker_high(series):
-#                 return series.max()
-#
-#             def whisker_low(series):
-#                 return series.min()
-#
-#         elif ' percentiles' in whisker_type:
-#             low, high = whisker_type.replace(' percentiles', '').split('/')
-#
-#             def whisker_high(series):
-#                 return np.nanpercentile(series, int(high))
-#
-#             def whisker_low(series):
-#                 return np.nanpercentile(series, int(low))
-#
-#         else:
-#             raise ValueError('Unknown whisker type: {}'.format(whisker_type))
-#
-#         def outliers(series):
-#             above = series[series > whisker_high(series)]
-#             below = series[series < whisker_low(series)]
-#             # pandas sometimes doesn't like getting lists back here
-#             return set(above.tolist() + below.tolist())
-#
-#         aggregate = [Q1, np.nanmedian, Q3, whisker_high, whisker_low, outliers]
-#         df = df.groupby(form_data.get('groupby')).agg(aggregate)
-#         chart_data = self.to_series(df)
-#         return chart_data
+class SeparatorViz(MarkupViz):
+
+    """Use to create section headers in a dashboard, similar to `Markup`"""
+
+    viz_type = 'separator'
+    verbose_name = _('Separator')
+
+
+class WordCloudViz(BaseViz):
+
+    """Build a colorful word cloud
+
+    Uses the nice library at:
+    https://github.com/jasondavies/d3-cloud
+    """
+
+    viz_type = 'word_cloud'
+    verbose_name = _('Word Cloud')
+    is_timeseries = False
+
+    def query_obj(self):
+        d = super().query_obj()
+        d['groupby'] = [self.form_data.get('series')]
+        return d
+
+
+class TreemapViz(BaseViz):
+
+    """Tree map visualisation for hierarchical data."""
+
+    viz_type = 'treemap'
+    verbose_name = _('Treemap')
+    credits = '<a href="https://d3js.org">d3.js</a>'
+    is_timeseries = False
+
+    def _nest(self, metric, df):
+        nlevels = df.index.nlevels
+        if nlevels == 1:
+            result = [{'name': n, 'value': v}
+                      for n, v in zip(df.index, df[metric])]
+        else:
+            result = [{'name': l, 'children': self._nest(metric, df.loc[l])}
+                      for l in df.index.levels[0]]
+        return result
+
+    def get_data(self, df):
+        df = df.set_index(self.form_data.get('groupby'))
+        chart_data = [{'name': metric, 'children': self._nest(metric, df)}
+                      for metric in df.columns]
+        return chart_data
+
+
+class CalHeatmapViz(BaseViz):
+
+    """Calendar heatmap."""
+
+    viz_type = 'cal_heatmap'
+    verbose_name = _('Calendar Heatmap')
+    credits = (
+        '<a href=https://github.com/wa0x6e/cal-heatmap>cal-heatmap</a>')
+    is_timeseries = True
+
+    def get_data(self, df):
+        form_data = self.form_data
+
+        data = {}
+        records = df.to_dict('records')
+        for metric in self.metric_labels:
+            values = {}
+            for obj in records:
+                v = obj[DTTM_ALIAS]
+                if hasattr(v, 'value'):
+                    v = v.value
+                values[str(v / 10**9)] = obj.get(metric)
+            data[metric] = values
+
+        start, end = utils.get_since_until(relative_end=relative_end,
+                                           time_range=form_data.get('time_range'),
+                                           since=form_data.get('since'),
+                                           until=form_data.get('until'))
+        if not start or not end:
+            raise Exception('Please provide both time bounds (Since and Until)')
+        domain = form_data.get('domain_granularity')
+        diff_delta = rdelta.relativedelta(end, start)
+        diff_secs = (end - start).total_seconds()
+
+        if domain == 'year':
+            range_ = diff_delta.years + 1
+        elif domain == 'month':
+            range_ = diff_delta.years * 12 + diff_delta.months + 1
+        elif domain == 'week':
+            range_ = diff_delta.years * 53 + diff_delta.weeks + 1
+        elif domain == 'day':
+            range_ = diff_secs // (24 * 60 * 60) + 1
+        else:
+            range_ = diff_secs // (60 * 60) + 1
+
+        return {
+            'data': data,
+            'start': start,
+            'domain': domain,
+            'subdomain': form_data.get('subdomain_granularity'),
+            'range': range_,
+        }
+
+    def query_obj(self):
+        d = super().query_obj()
+        fd = self.form_data
+        d['metrics'] = fd.get('metrics')
+        return d
+
+
+class NVD3Viz(BaseViz):
+
+    """Base class for all nvd3 vizs"""
+
+    credits = '<a href="http://nvd3.org/">NVD3.org</a>'
+    viz_type = None
+    verbose_name = 'Base NVD3 Viz'
+    is_timeseries = False
+
+
+class BoxPlotViz(NVD3Viz):
+
+    """Box plot viz from ND3"""
+
+    viz_type = 'box_plot'
+    verbose_name = _('Box Plot')
+    sort_series = False
+    is_timeseries = True
+
+    def to_series(self, df, classed='', title_suffix=''):
+        label_sep = ' - '
+        chart_data = []
+        for index_value, row in zip(df.index, df.to_dict(orient='records')):
+            if isinstance(index_value, tuple):
+                index_value = label_sep.join(index_value)
+            boxes = defaultdict(dict)
+            for (label, key), value in row.items():
+                if key == 'nanmedian':
+                    key = 'Q2'
+                boxes[label][key] = value
+            for label, box in boxes.items():
+                if len(self.form_data.get('metrics')) > 1:
+                    # need to render data labels with metrics
+                    chart_label = label_sep.join([index_value, label])
+                else:
+                    chart_label = index_value
+                chart_data.append({
+                    'label': chart_label,
+                    'values': box,
+                })
+        return chart_data
+
+    def get_data(self, df):
+        form_data = self.form_data
+
+        # conform to NVD3 names
+        def Q1(series):  # need to be named functions - can't use lambdas
+            return np.nanpercentile(series, 25)
+
+        def Q3(series):
+            return np.nanpercentile(series, 75)
+
+        whisker_type = form_data.get('whisker_options')
+        if whisker_type == 'Tukey':
+
+            def whisker_high(series):
+                upper_outer_lim = Q3(series) + 1.5 * (Q3(series) - Q1(series))
+                return series[series <= upper_outer_lim].max()
+
+            def whisker_low(series):
+                lower_outer_lim = Q1(series) - 1.5 * (Q3(series) - Q1(series))
+                return series[series >= lower_outer_lim].min()
+
+        elif whisker_type == 'Min/max (no outliers)':
+
+            def whisker_high(series):
+                return series.max()
+
+            def whisker_low(series):
+                return series.min()
+
+        elif ' percentiles' in whisker_type:
+            low, high = whisker_type.replace(' percentiles', '').split('/')
+
+            def whisker_high(series):
+                return np.nanpercentile(series, int(high))
+
+            def whisker_low(series):
+                return np.nanpercentile(series, int(low))
+
+        else:
+            raise ValueError('Unknown whisker type: {}'.format(whisker_type))
+
+        def outliers(series):
+            above = series[series > whisker_high(series)]
+            below = series[series < whisker_low(series)]
+            # pandas sometimes doesn't like getting lists back here
+            return set(above.tolist() + below.tolist())
+
+        aggregate = [Q1, np.nanmedian, Q3, whisker_high, whisker_low, outliers]
+        df = df.groupby(form_data.get('groupby')).agg(aggregate)
+        chart_data = self.to_series(df)
+        return chart_data
 
 
 class BubbleViz(NVD3Viz):
