@@ -702,26 +702,26 @@ class PivotTableViz(BaseViz):
         )
 
 
-# class MarkupViz(BaseViz):
-#
-#     """Use html or markdown to create a free form widget"""
-#
-#     viz_type = 'markup'
-#     verbose_name = _('Markup')
-#     is_timeseries = False
-#
-#     def query_obj(self):
-#         return None
-#
-#     def get_df(self, query_obj=None):
-#         return None
-#
-#     def get_data(self, df):
-#         markup_type = self.form_data.get('markup_type')
-#         code = self.form_data.get('code', '')
-#         if markup_type == 'markdown':
-#             code = markdown(code)
-#         return dict(html=code, theme_css=get_css_manifest_files('theme'))
+class MarkupViz(BaseViz):
+
+    """Use html or markdown to create a free form widget"""
+
+    viz_type = 'markup'
+    verbose_name = _('Markup')
+    is_timeseries = False
+
+    def query_obj(self):
+        return None
+
+    def get_df(self, query_obj=None):
+        return None
+
+    def get_data(self, df):
+        markup_type = self.form_data.get('markup_type')
+        code = self.form_data.get('code', '')
+        if markup_type == 'markdown':
+            code = markdown(code)
+        return dict(html=code, theme_css=get_css_manifest_files('theme'))
 
 
 class SeparatorViz(MarkupViz):
