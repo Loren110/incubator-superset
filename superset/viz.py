@@ -724,12 +724,12 @@ class MarkupViz(BaseViz):
         return dict(html=code, theme_css=get_css_manifest_files('theme'))
 
 
-# class SeparatorViz(MarkupViz):
-#
-#     """Use to create section headers in a dashboard, similar to `Markup`"""
-#
-#     viz_type = 'separator'
-#     verbose_name = _('Separator')
+class SeparatorViz(MarkupViz):
+
+    """Use to create section headers in a dashboard, similar to `Markup`"""
+
+    viz_type = 'separator'
+    verbose_name = _('Separator')
 
 
 class WordCloudViz(BaseViz):
