@@ -732,48 +732,48 @@ class SeparatorViz(MarkupViz):
     verbose_name = _('Separator')
 
 
-# class WordCloudViz(BaseViz):
-#
-#     """Build a colorful word cloud
-#
-#     Uses the nice library at:
-#     https://github.com/jasondavies/d3-cloud
-#     """
-#
-#     viz_type = 'word_cloud'
-#     verbose_name = _('Word Cloud')
-#     is_timeseries = False
-#
-#     def query_obj(self):
-#         d = super().query_obj()
-#         d['groupby'] = [self.form_data.get('series')]
-#         return d
-#
-#
-# class TreemapViz(BaseViz):
-#
-#     """Tree map visualisation for hierarchical data."""
-#
-#     viz_type = 'treemap'
-#     verbose_name = _('Treemap')
-#     credits = '<a href="https://d3js.org">d3.js</a>'
-#     is_timeseries = False
-#
-#     def _nest(self, metric, df):
-#         nlevels = df.index.nlevels
-#         if nlevels == 1:
-#             result = [{'name': n, 'value': v}
-#                       for n, v in zip(df.index, df[metric])]
-#         else:
-#             result = [{'name': l, 'children': self._nest(metric, df.loc[l])}
-#                       for l in df.index.levels[0]]
-#         return result
-#
-#     def get_data(self, df):
-#         df = df.set_index(self.form_data.get('groupby'))
-#         chart_data = [{'name': metric, 'children': self._nest(metric, df)}
-#                       for metric in df.columns]
-#         return chart_data
+class WordCloudViz(BaseViz):
+
+    """Build a colorful word cloud
+
+    Uses the nice library at:
+    https://github.com/jasondavies/d3-cloud
+    """
+
+    viz_type = 'word_cloud'
+    verbose_name = _('Word Cloud')
+    is_timeseries = False
+
+    def query_obj(self):
+        d = super().query_obj()
+        d['groupby'] = [self.form_data.get('series')]
+        return d
+
+
+class TreemapViz(BaseViz):
+
+    """Tree map visualisation for hierarchical data."""
+
+    viz_type = 'treemap'
+    verbose_name = _('Treemap')
+    credits = '<a href="https://d3js.org">d3.js</a>'
+    is_timeseries = False
+
+    def _nest(self, metric, df):
+        nlevels = df.index.nlevels
+        if nlevels == 1:
+            result = [{'name': n, 'value': v}
+                      for n, v in zip(df.index, df[metric])]
+        else:
+            result = [{'name': l, 'children': self._nest(metric, df.loc[l])}
+                      for l in df.index.levels[0]]
+        return result
+
+    def get_data(self, df):
+        df = df.set_index(self.form_data.get('groupby'))
+        chart_data = [{'name': metric, 'children': self._nest(metric, df)}
+                      for metric in df.columns]
+        return chart_data
 
 
 class CalHeatmapViz(BaseViz):
